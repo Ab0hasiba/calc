@@ -11,6 +11,7 @@ jobs:
     env:
       ANDROID_SDK_ROOT: /opt/android-sdk
       ANDROID_HOME: /opt/android-sdk
+      PATH: /opt/android-sdk/cmdline-tools/latest/bin:$PATH
 
     steps:
       - name: Checkout source code
@@ -26,13 +27,9 @@ jobs:
           sudo apt update
           sudo apt install -y zip unzip openjdk-17-jdk python3-pip python3-setuptools git wget build-essential libncurses5-dev
 
-      - name: Create Android SDK directory
-        run: |
-          sudo mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-          sudo chown $USER:$USER $ANDROID_SDK_ROOT -R
-
       - name: Download Android SDK Command Line Tools
         run: |
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
           unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
           mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
@@ -40,8 +37,8 @@ jobs:
 
       - name: Install Android build tools and platform tools
         run: |
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
+          yes | sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
 
       - name: Verify aidl presence
         run: |
@@ -54,8 +51,6 @@ jobs:
 
       - name: Build the APK
         run: |
-          export ANDROID_SDK_ROOT=/opt/android-sdk
-          export ANDROID_HOME=/opt/android-sdk
           buildozer android debug
 
       - name: Upload APK artifact
