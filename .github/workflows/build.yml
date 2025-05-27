@@ -38,14 +38,16 @@ jobs:
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
 
+      - name: Verify aidl presence
+        run: |
+          ls -l $ANDROID_SDK_ROOT/build-tools/36.0.0/aidl
+
       - name: Install buildozer
         run: |
           pip install --upgrade pip
           pip install cython virtualenv buildozer
 
       - name: Build the APK
-        env:
-          ANDROIDSDK: /tmp/android-sdk
         run: |
           buildozer android debug
 
