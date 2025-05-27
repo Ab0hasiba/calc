@@ -10,6 +10,7 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: /tmp/android-sdk
+      ANDROIDSDK: /tmp/android-sdk
 
     steps:
       - name: Checkout source code
@@ -38,17 +39,15 @@ jobs:
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
 
-      - name: Verify aidl presence
-        run: |
-          ls -l $ANDROID_SDK_ROOT/build-tools/36.0.0/aidl
-
-      - name: Install buildozer
+      - name: Install buildozer and dependencies
         run: |
           pip install --upgrade pip
           pip install cython virtualenv buildozer
 
       - name: Build the APK
         run: |
+          export ANDROIDSDK=/tmp/android-sdk
+          export ANDROID_SDK_ROOT=/tmp/android-sdk
           buildozer android debug
 
       - name: Upload APK artifact
