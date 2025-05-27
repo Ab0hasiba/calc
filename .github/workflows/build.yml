@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
+      ANDROID_SDK_ROOT: /tmp/android-sdk
 
     steps:
       - name: Checkout source code
@@ -45,7 +45,7 @@ jobs:
 
       - name: Build the APK
         env:
-          ANDROIDSDK: ${{ runner.temp }}/android-sdk
+          ANDROIDSDK: /tmp/android-sdk
         run: |
           buildozer android debug
 
