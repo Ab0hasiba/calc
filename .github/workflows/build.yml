@@ -11,9 +11,12 @@ jobs:
     env:
       ANDROID_SDK_ROOT: /tmp/android-sdk
       ANDROIDSDK: /tmp/android-sdk
-      PATH: /tmp/android-sdk/cmdline-tools/latest/bin:/tmp/android-sdk/platform-tools:$PATH
+      PATH: /tmp/android-sdk/cmdline-tools/latest/bin:/tmp/android-sdk/platform-tools:/tmp/android-sdk/build-tools/36.0.0:$PATH
 
     steps:
+      - name: Install tar (just in case)
+        run: sudo apt-get update && sudo apt-get install -y tar
+
       - name: Checkout source code
         uses: actions/checkout@v4
 
@@ -45,11 +48,16 @@ jobs:
           pip install --upgrade pip
           pip install cython virtualenv buildozer
 
+      - name: Debug AIDL check
+        run: |
+          ls -l /tmp/android-sdk/build-tools/36.0.0/
+          /tmp/android-sdk/build-tools/36.0.0/aidl --version || echo "AIDL not found"
+
       - name: Build the APK
         run: |
           export ANDROIDSDK=/tmp/android-sdk
           export ANDROID_SDK_ROOT=/tmp/android-sdk
-          export PATH=/tmp/android-sdk/cmdline-tools/latest/bin:/tmp/android-sdk/platform-tools:$PATH
+          export PATH=/tmp/android-sdk/cmdline-tools/latest/bin:/tmp/android-sdk/platform-tools:/tmp/android-sdk/build-tools/36.0.0:$PATH
           buildozer android debug
 
       - name: Upload APK artifact
