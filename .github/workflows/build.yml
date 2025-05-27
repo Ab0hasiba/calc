@@ -8,6 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -24,18 +27,16 @@ jobs:
 
       - name: Download Android SDK Command Line Tools
         run: |
-          ANDROID_SDK_ROOT="${RUNNER_TEMP}/android-sdk"
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"
-          mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
           rm cmdline-tools.zip
 
       - name: Install Android build tools and platform tools
         run: |
-          ANDROID_SDK_ROOT="${RUNNER_TEMP}/android-sdk"
-          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
-          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses --sdk_root="$ANDROID_SDK_ROOT"
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
 
       - name: Install buildozer
         run: |
@@ -43,6 +44,8 @@ jobs:
           pip install cython virtualenv buildozer
 
       - name: Build the APK
+        env:
+          ANDROIDSDK: ${{ runner.temp }}/android-sdk
         run: |
           buildozer android debug
 
