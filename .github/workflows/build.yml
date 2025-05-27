@@ -11,7 +11,7 @@ jobs:
     env:
       ANDROID_SDK_ROOT: /tmp/android-sdk
       ANDROIDSDK: /tmp/android-sdk
-      PATH: /tmp/android-sdk/cmdline-tools/latest/bin:/tmp/android-sdk/platform-tools:/tmp/android-sdk/build-tools/36.0.0:$PATH
+      PATH: /tmp/android-sdk/build-tools/36.0.0:/tmp/android-sdk/platform-tools:/tmp/android-sdk/cmdline-tools/latest/bin:$PATH
 
     steps:
       - name: Checkout source code
@@ -42,14 +42,14 @@ jobs:
 
       - name: Verify aidl presence
         run: |
-          ls -l $ANDROID_SDK_ROOT/build-tools/36.0.0/aidl || echo "aidl not found"
+          ls -l $ANDROID_SDK_ROOT/build-tools/36.0.0/aidl
 
       - name: Install Buildozer and dependencies
         run: |
           pip install --upgrade pip
           pip install cython virtualenv buildozer
 
-      - name: Initialize Buildozer (if .spec missing)
+      - name: Initialize Buildozer if needed
         run: |
           if [ ! -f buildozer.spec ]; then
             buildozer init
@@ -57,8 +57,9 @@ jobs:
 
       - name: Build the APK
         run: |
-          export ANDROIDSDK=$ANDROID_SDK_ROOT
-          export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
+          export ANDROIDSDK=/tmp/android-sdk
+          export ANDROID_SDK_ROOT=/tmp/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/build-tools/36.0.0:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
           buildozer android debug
 
       - name: Upload APK artifact
