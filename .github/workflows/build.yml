@@ -10,62 +10,55 @@ jobs:
 
     env:
       ANDROID_SDK_ROOT: /opt/android-sdk
-      ANDROIDSDK: /opt/android-sdk
+      ANDROID_HOME: /opt/android-sdk
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y zip unzip tar openjdk-17-jdk python3-pip python3-setuptools git wget build-essential libncurses5-dev libffi-dev
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y zip unzip openjdk-17-jdk python3-pip python3-setuptools git wget build-essential libncurses5-dev
+
+      - name: Create Android SDK directory
+        run: |
+          sudo mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          sudo chown $USER:$USER $ANDROID_SDK_ROOT -R
+
       - name: Download Android SDK Command Line Tools
         run: |
-          sudo mkdir -p /opt/android-sdk/cmdline-tools
-          sudo wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          sudo unzip cmdline-tools.zip -d /opt/android-sdk/cmdline-tools
-          sudo mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
           rm cmdline-tools.zip
-          sudo chown -R $USER:$USER /opt/android-sdk
 
-      - name: Install Android SDK Build Tools (includes AIDL)
+      - name: Install Android build tools and platform tools
         run: |
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;36.0.0"
-
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
 
-      - name: Confirm aidl is present
+      - name: Verify aidl presence
         run: |
-          AIDL_PATH="$ANDROID_SDK_ROOT/build-tools/36.0.0/aidl"
-          if [ -f "$AIDL_PATH" ]; then
-            echo "✅ AIDL located at $AIDL_PATH"
-          else
-            echo "❌ AIDL not found! Check your sdkmanager install logs."
-            exit 1
-          fi
+          ls -l $ANDROID_SDK_ROOT/build-tools/36.0.0/aidl
 
-      - name: Install Buildozer and dependencies
+      - name: Install buildozer and dependencies
         run: |
           pip install --upgrade pip
           pip install cython virtualenv buildozer
 
       - name: Build the APK
         run: |
-          export ANDROIDSDK=$ANDROID_SDK_ROOT
-          export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
+          export ANDROID_SDK_ROOT=/opt/android-sdk
+          export ANDROID_HOME=/opt/android-sdk
           buildozer android debug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: myapp
