@@ -24,8 +24,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          apt-get update
-          apt-get install -y zip unzip openjdk-17-jdk python3-pip python3-setuptools git wget build-essential libncurses5-dev tar
+          sudo apt update
+          sudo apt install -y zip unzip openjdk-17-jdk python3-pip python3-setuptools git wget build-essential libncurses5-dev tar
 
       - name: Download Android SDK Command Line Tools
         run: |
@@ -37,24 +37,28 @@ jobs:
 
       - name: Install Android build tools and platform tools
         run: |
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
 
-      - name: Install buildozer and dependencies
+      - name: Verify aidl presence
+        run: |
+          ls -l $ANDROID_SDK_ROOT/build-tools/36.0.0/aidl || echo "aidl not found"
+
+      - name: Install Buildozer and dependencies
         run: |
           pip install --upgrade pip
           pip install cython virtualenv buildozer
 
-      - name: Debug AIDL check
+      - name: Initialize Buildozer (if .spec missing)
         run: |
-          ls -l /tmp/android-sdk/build-tools/36.0.0/
-          /tmp/android-sdk/build-tools/36.0.0/aidl --version || echo "AIDL not found"
+          if [ ! -f buildozer.spec ]; then
+            buildozer init
+          fi
 
       - name: Build the APK
         run: |
-          export ANDROIDSDK=/tmp/android-sdk
-          export ANDROID_SDK_ROOT=/tmp/android-sdk
-          export PATH=/tmp/android-sdk/cmdline-tools/latest/bin:/tmp/android-sdk/platform-tools:/tmp/android-sdk/build-tools/36.0.0:$PATH
+          export ANDROIDSDK=$ANDROID_SDK_ROOT
+          export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
           buildozer android debug
 
       - name: Upload APK artifact
