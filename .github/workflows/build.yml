@@ -11,6 +11,7 @@ jobs:
     env:
       ANDROID_SDK_ROOT: /tmp/android-sdk
       ANDROIDSDK: /tmp/android-sdk
+      PATH: /tmp/android-sdk/cmdline-tools/latest/bin:/tmp/android-sdk/platform-tools:$PATH
 
     steps:
       - name: Checkout source code
@@ -36,8 +37,8 @@ jobs:
 
       - name: Install Android build tools and platform tools
         run: |
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --install "platform-tools" "platforms;android-33" "build-tools;36.0.0"
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
 
       - name: Install buildozer and dependencies
         run: |
@@ -48,6 +49,7 @@ jobs:
         run: |
           export ANDROIDSDK=/tmp/android-sdk
           export ANDROID_SDK_ROOT=/tmp/android-sdk
+          export PATH=/tmp/android-sdk/cmdline-tools/latest/bin:/tmp/android-sdk/platform-tools:$PATH
           buildozer android debug
 
       - name: Upload APK artifact
